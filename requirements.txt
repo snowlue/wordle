@@ -2,6 +2,8 @@ psycopg2-binary
 peewee
 pymorphy2
 pymorphy2-dicts-ru
+redis
 requests
+types-redis
 types-requests
 vk_api
