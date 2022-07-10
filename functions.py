@@ -39,6 +39,7 @@ def check_word_existence(word: str) -> bool:
         return False
     if word.lower() in [w.lower() for w in res]:
         return True
+    return False
 
 
 def get_new_word() -> str:
