@@ -1,4 +1,4 @@
-# pylint: disable=consider-using-f-string
+# pylint: disable=consider-using-f-string,no-value-for-parameter
 
 from json import dumps
 from traceback import format_exc
@@ -10,7 +10,6 @@ from functions import check_word_existence, get_new_word, msg, vk_session
 from models import Player
 
 if __name__ == "__main__":
-    
     longpoll = VkBotLongPoll(vk_session, '210542356', 0)
     ADMIN = 165504240
     morph = MorphAnalyzer(lang='ru')
@@ -36,15 +35,15 @@ if __name__ == "__main__":
                                 dumps(i, ensure_ascii=False) for i in list(Player.select().dicts().execute())
                             ])))
                             continue
-                    
+
                         if 'clear' in text:
                             action, act_id = text.split()[1], text.split()[2]
                             if not act_id.isdigit() or action not in ['all', 'stats']:
                                 msg(ADMIN, 'Некорректный ввод.')
                                 continue
-                            
+
                             act_player = Player.get(Player.id == int(act_id))
-                            
+
                             if action == 'all':
                                 res = act_player.delete_instance()
                                 msg(ADMIN, 'Удалены данные о {} пользователях.'.format(res))
@@ -97,7 +96,7 @@ if __name__ == "__main__":
                             if player.uword[i].upper() in lmask[lmask.index('⠀'):]:
                                 lmask.remove(player.uword[i].upper())
                             lmask[i] = player.uword[i].upper()
-                            lmask = ''.join(lmask)
+                            lmask = ''.join(lmask)  # type: ignore
                             lmask += player.uword[i].upper()
                         elif (player.uword[i] in player.cword
                               and player.uword[:i].count(player.uword[i])
