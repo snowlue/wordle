@@ -8,10 +8,10 @@ from vk_api.bot_longpoll import VkBotLongPoll
 
 from functions import check_word_existence, get_new_word, msg, vk_session
 from models import Player
+from settings import GROUP_ID, ADMIN
 
 if __name__ == "__main__":
-    longpoll = VkBotLongPoll(vk_session, '210542356', 0)
-    ADMIN = 165504240
+    longpoll = VkBotLongPoll(vk_session, GROUP_ID, 0)
     morph = MorphAnalyzer(lang='ru')
 
     print('Бот запущен 🚀')

@@ -1,13 +1,13 @@
 from json import dumps, loads
-from os import environ
 
 from peewee import (IntegerField, Model, PostgresqlDatabase, SmallIntegerField,
                     TextField)
 from playhouse.db_url import connect
 
 from functions import get_new_word
+from settings import DATABASE_URL
 
-conn: PostgresqlDatabase = connect(environ['DATABASE_URL'], sslmode='require')
+conn: PostgresqlDatabase = connect(DATABASE_URL, sslmode='require')
 
 
 class BaseModel(Model):

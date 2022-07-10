@@ -1,9 +1,10 @@
-from os import environ
 from random import choice, randint
 from urllib.parse import unquote
 
 from requests import exceptions, get
 from vk_api import VkApi
+
+from settings import VK_API_TOKEN
 
 
 def check_connection() -> bool:
@@ -87,5 +88,5 @@ def msg(id_: int, message: str = '', board: list = None, attach: str = '', parse
     print('📨 {1}: отправлено сообщение «{0}»'.format(message.replace('\n', ' '), id_))
 
 
-vk_session = VkApi(token=environ['WORDLE_TOKEN'])
+vk_session = VkApi(token=VK_API_TOKEN)
 vk = vk_session.get_api()
