@@ -36,23 +36,32 @@ class Player(BaseModel):
         self.guesses += 1
         self.save()
 
-    def win(self, guess):
-        stats_from_bd = loads(self.stats)
+    def win(self, guess: int, is_everyday: bool = False):
+        stats_from_bd = loads(self.stats if is_everyday else self.everyday_stats)
         print(stats_from_bd)
         stats_from_bd[str(guess)] += 1
         stats_from_bd['wins'] += 1
         stats_from_bd['total'] += 1
-        self.stats = dumps(stats_from_bd)
+        if is_everyday:
+            self.everyday_stats = dumps(stats_from_bd)
+        else:
+            self.stats = dumps(stats_from_bd)
         self.new_game()
 
-    def lose(self):
-        stats_from_bd = loads(self.stats)
+    def lose(self, is_everyday: bool = False):
+        stats_from_bd = loads(self.stats if is_everyday else self.everyday_stats)
         stats_from_bd['total'] += 1
-        self.stats = dumps(stats_from_bd)
+        if is_everyday:
+            self.everyday_stats = dumps(stats_from_bd)
+        else:
+            self.stats = dumps(stats_from_bd)
         self.new_game()
 
     def get_stats(self):
         return loads(self.stats)
+
+    def get_everyday_stats(self):
+        return loads(self.everyday_stats)
 
     class Meta:
         table_name = 'Data'

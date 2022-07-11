@@ -55,7 +55,7 @@ if __name__ == "__main__":
                             continue
 
                         if 'помощь' in text or 'help' in text:
-                            print('– data — выводит всех пользователей из бд\n'
+                            msg(uid, '– data — выводит всех пользователей из бд\n'
                                   '– clear {stats|all} <id> — очищает данные о пользователе по id\n'
                                   '⠀stats — только статистику\n⠀all — полностью пользователя')
                             continue
