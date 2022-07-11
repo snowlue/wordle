@@ -23,9 +23,11 @@ class Player(BaseModel):
     uword = TextField(default='')
     used_letters = TextField(default='АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ')
     stats = TextField(default=dumps({i: 0 for i in (1, 2, 3, 4, 5, 6, 'wins', 'total')}))
+    everyday_word = TextField(default='')
+    everyday_stats = TextField(default=dumps({i: 0 for i in (1, 2, 3, 4, 5, 6, 'wins', 'total')}))
 
-    def new_game(self):
-        self.cword = get_new_word()
+    def new_game(self, cword: str = None):
+        self.cword = get_new_word() if not cword else cword
         self.uword, self.guesses, self.story = '', 1, ''
         self.used_letters = 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'
         self.save()
@@ -59,5 +61,5 @@ class Player(BaseModel):
 if __name__ == "__main__":
     response = input('Создаём таблицы? (Y/N) ').lower()
     if response == 'y':
-        conn.create_tables([Player])
+        conn.create_tables([Player], safe=False)
     # ПОЛЕ ДЛЯ СВОБОДНЫХ ЗАПРОСОВ
