@@ -37,7 +37,7 @@ class Player(BaseModel):
         self.save()
 
     def win(self, guess: int, is_everyday: bool = False):
-        stats_from_bd = loads(self.stats if is_everyday else self.everyday_stats)
+        stats_from_bd = loads(self.everyday_stats if is_everyday else self.stats)
         print(stats_from_bd)
         stats_from_bd[str(guess)] += 1
         stats_from_bd['wins'] += 1
@@ -49,7 +49,7 @@ class Player(BaseModel):
         self.new_game()
 
     def lose(self, is_everyday: bool = False):
-        stats_from_bd = loads(self.stats if is_everyday else self.everyday_stats)
+        stats_from_bd = loads(self.everyday_stats if is_everyday else self.stats)
         stats_from_bd['total'] += 1
         if is_everyday:
             self.everyday_stats = dumps(stats_from_bd)
