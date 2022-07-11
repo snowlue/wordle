@@ -48,8 +48,7 @@ def get_new_word() -> str:
     При отсутствии доступа к словарю, получает слово из локального словаря.
     '''
     if not check_connection():
-        with open('5lenwords_russian_base.txt', encoding='utf-8') as file:
-            return choice(file.readlines())
+        return get_word_from_local()
 
     res = get('https://ru.wiktionary.org/wiki/Служебная:RandomInCategory/Слова_из_5_букв/ru')
     word = unquote(res.url).split('/')[-1]
@@ -63,6 +62,12 @@ def get_new_word() -> str:
 
     return word
 
+
+def get_word_from_local() -> str:
+    '''Получает новое слово из локальной базы пятибуквенных слов.'''
+
+    with open('5lenwords_russian_base.txt', encoding='utf-8') as file:
+        return choice(file.readlines())
 
 def msg(id_: int, message: str = '', board: list = None, attach: str = '', parse: bool = True):
     '''Отправляет сообщение, используя текущую сессию vk_session.
