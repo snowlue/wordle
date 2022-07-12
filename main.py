@@ -1,5 +1,6 @@
 # pylint: disable=consider-using-f-string,no-value-for-parameter
 
+import time
 from datetime import datetime
 from json import dumps
 from traceback import format_exc
@@ -111,10 +112,9 @@ if __name__ == "__main__":
 
                     if any(w in text for w in ['ворд', 'ежедн', 'слово дня']):
                         if thisday_word.upper() in player.everyday_word:
-                            s = (datetime(
-                                datetime.now().year, datetime.now().month, datetime.now().day + 1, 0, 0
-                            ) - datetime.now()).seconds
-                            h, m = s // 3600, s % 3600 // 60
+                            s = (datetime(datetime.now().year, datetime.now().month, datetime.now().day + 1)
+                                 - datetime.now()).seconds
+                            h, m = s // 3600, s % 3600 // 60 + 1
                             p_h = ('' if h % 10 == 1 else 'а') if h // 10 in [0, 2] and h % 10 in range(1, 5) else 'ов'
                             p_m = ('у' if m % 10 == 1 else 'ы') if m // 10 in [0] + \
                                 list(range(2, 7)) and m % 10 in range(1, 5) else ''
@@ -224,12 +224,14 @@ if __name__ == "__main__":
                     player.save()
             except Exception:
                 msg(ADMIN, 'Поймали ошибку. Смотри трейсбек:\n\n{}'.format('\n'.join(format_exc().split('\n')[1:])))
-        if (datetime.now().hour, datetime.now().minute, datetime.now().second) == (0, 0, 0):
+        if (datetime.now().hour + 3, datetime.now().minute, datetime.now().second) == (0, 0, 0):
             redis_db.set('everyday_word', get_word_from_local(), ex=86460)
-        if (datetime.now().hour, datetime.now().minute, datetime.now().second) == (10, 0, 0):
+            time.sleep(1)
+        if (datetime.now().hour + 3, datetime.now().minute, datetime.now().second) == (10, 0, 0):
             all_players: list[Player] = Player.select()
             thisday_word = redis_db.get('everyday_word').decode()
             for p in all_players:
                 if thisday_word.upper() not in p.everyday_word and p.get_push('everyday'):
                     msg(p.id, 'Привет! В режиме «Ворд дня» появилось новое слово. Сыграем? Пиши «ворд дня» и погнали! '
                               '⬜🟨🟩\n\nОтключить ежедневные напоминания можно при помощи команды «переключить пуши».')
+            time.sleep(1)
