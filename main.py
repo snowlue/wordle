@@ -114,13 +114,13 @@ if __name__ == "__main__":
                         if thisday_word.upper() in player.everyday_word:
                             s = (datetime(datetime.now().year, datetime.now().month, datetime.now().day + 1)
                                  - datetime.now()).seconds
-                            h, m = s // 3600, s % 3600 // 60 + 1
+                            h, m = s // 3600 - 3, s % 3600 // 60 + 1
                             p_h = ('' if h % 10 == 1 else 'а') if h // 10 in [0, 2] and h % 10 in range(1, 5) else 'ов'
                             p_m = ('у' if m % 10 == 1 else 'ы') if m // 10 in [0] + \
                                 list(range(2, 7)) and m % 10 in range(1, 5) else ''
                             msg(uid, '{}\n\n'.format(player.everyday_word)
                                      + 'Кажется, сегодняшний ворд дня уже разгадан. Отдыхай до завтра!\n'
-                                     'Увидимся через {} час{} и {} минут{} ⏳'.format(h, p_h, m, p_m))
+                                     'Новое слово через {} час{} и {} минут{} ⏳'.format(h, p_h, m, p_m))
                         else:
                             player.new_game(redis_db.get('everyday_word').decode())
                             msg(uid, 'Каждый день я загадываю любое слово из пяти букв, и все игроки его отгадывают. '
