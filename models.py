@@ -25,6 +25,7 @@ class Player(BaseModel):
     stats = TextField(default=dumps({i: 0 for i in (1, 2, 3, 4, 5, 6, 'wins', 'total')}))
     everyday_word = TextField(default='')
     everyday_stats = TextField(default=dumps({i: 0 for i in (1, 2, 3, 4, 5, 6, 'wins', 'total')}))
+    push_notifies = TextField(default=dumps({'everyday': False}))
 
     def new_game(self, cword: str = None):
         self.cword = get_new_word() if not cword else cword
@@ -62,6 +63,18 @@ class Player(BaseModel):
 
     def get_everyday_stats(self):
         return loads(self.everyday_stats)
+
+    def toggle_push(self, push_type: str, value: bool = None):
+        pushes = loads(self.push_notifies)
+        if push_type not in pushes:
+            return
+        pushes[push_type] = not pushes[push_type] if value is None else value
+        self.push_notifies = dumps(pushes)
+        self.save()
+    
+    def get_push(self, push_type: str):
+        pushes = loads(self.push_notifies)
+        return pushes.get(push_type)
 
     class Meta:
         table_name = 'Data'
