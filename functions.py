@@ -67,7 +67,8 @@ def get_word_from_local() -> str:
     '''Получает новое слово из локальной базы пятибуквенных слов.'''
 
     with open('5lenwords_russian_base.txt', encoding='utf-8') as file:
-        return choice(file.readlines())
+        return choice(file.readlines()).strip()
+
 
 def msg(id_: int, message: str = '', board: list = None, attach: str = '', parse: bool = True):
     '''Отправляет сообщение, используя текущую сессию vk_session.

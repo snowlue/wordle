@@ -71,7 +71,7 @@ class Player(BaseModel):
         pushes[push_type] = not pushes[push_type] if value is None else value
         self.push_notifies = dumps(pushes)
         self.save()
-    
+
     def get_push(self, push_type: str):
         pushes = loads(self.push_notifies)
         return pushes.get(push_type)

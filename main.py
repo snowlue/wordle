@@ -8,9 +8,10 @@ from pymorphy2 import MorphAnalyzer
 from redis import from_url
 from vk_api.bot_longpoll import VkBotLongPoll
 
-from functions import check_word_existence, get_new_word, get_word_from_local, msg, vk_session
+from functions import (check_word_existence, get_new_word, get_word_from_local,
+                       msg, vk_session)
 from models import Player
-from settings import GROUP_ID, ADMIN, REDIS_URL
+from settings import ADMIN, GROUP_ID, REDIS_URL
 
 if __name__ == "__main__":
     longpoll = VkBotLongPoll(vk_session, GROUP_ID, 0)
@@ -52,7 +53,7 @@ if __name__ == "__main__":
 
                         if 'clear' in text:
                             action, act_id = text.split()[1], text.split()[2]
-                            if not act_id.isdigit() or action not in ['all', 'stats', 'everyday_stats']:
+                            if not act_id.isdigit() or action not in ['all', 'everyday_stats', 'stats']:
                                 msg(ADMIN, 'Некорректный ввод.')
                                 continue
 
@@ -61,12 +62,12 @@ if __name__ == "__main__":
                             if action == 'all':
                                 res = act_player.delete_instance()
                                 msg(ADMIN, 'Удалены данные о {} пользователях.'.format(res))
-                            elif action == 'stats':
-                                act_player.stats = dumps({i: 0 for i in (1, 2, 3, 4, 5, 6, 'wins', 'total')})
-                                act_player.save()
-                                msg(ADMIN, 'Статистика пользователя @id{} очищена.'.format(act_id))
                             elif action == 'everyday_stats':
                                 act_player.everyday_stats = dumps({i: 0 for i in (1, 2, 3, 4, 5, 6, 'wins', 'total')})
+                                act_player.save()
+                                msg(ADMIN, 'Статистика пользователя @id{} очищена.'.format(act_id))
+                            elif action == 'stats':
+                                act_player.stats = dumps({i: 0 for i in (1, 2, 3, 4, 5, 6, 'wins', 'total')})
                                 act_player.save()
                                 msg(ADMIN, 'Статистика пользователя @id{} очищена.'.format(act_id))
                             continue
@@ -84,12 +85,12 @@ if __name__ == "__main__":
                             continue
 
                         if 'помощь' in text or 'help' in text:
-                            msg(uid, '– data [id] — выводит всех пользователей или одного по id из бд\n'
-                                     '– change everyday_word <word> — заменяет слово дня на word\n'
+                            msg(uid, '– change everyday_word <word> — заменяет слово дня на word\n'
                                      '– clear {everyday_stats|stats|all} <id> — очищает данные о пользователе по id\n'
+                                     '⠀ ⠀all — полностью пользователя\n'
                                      '⠀ ⠀everyday_stats — только статистику слова дня\n'
                                      '⠀ ⠀stats — только общую статистику\n'
-                                     '⠀ ⠀all — полностью пользователя')
+                                     '– data [id] — выводит всех пользователей или одного по id из бд')
                     # ======================
 
                     if 'статистика' in text:
