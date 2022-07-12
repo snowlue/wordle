@@ -231,4 +231,5 @@ if __name__ == "__main__":
             thisday_word = redis_db.get('everyday_word').decode()
             for p in all_players:
                 if thisday_word.upper() not in p.everyday_word and p.get_push('everyday'):
-                    msg(p.id, 'Привет! Кажется, в режиме «Ворд дня» обновилось слово. Сыграем? ⬜🟨🟩')
+                    msg(p.id, 'Привет! В режиме «Ворд дня» появилось новое слово. Сыграем? Пиши «ворд дня» и погнали! '
+                              '⬜🟨🟩\n\nОтключить ежедневные напоминания можно при помощи команды «переключить пуши».')
