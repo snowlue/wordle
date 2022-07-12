@@ -1,18 +1,24 @@
 # pylint: disable=consider-using-f-string,no-value-for-parameter
 
+from datetime import datetime
 from json import dumps
 from traceback import format_exc
 
 from pymorphy2 import MorphAnalyzer
+from redis import from_url
 from vk_api.bot_longpoll import VkBotLongPoll
 
-from functions import check_word_existence, get_new_word, msg, vk_session
+from functions import check_word_existence, get_new_word, get_word_from_local, msg, vk_session
 from models import Player
-from settings import GROUP_ID, ADMIN
+from settings import GROUP_ID, ADMIN, REDIS_URL
 
 if __name__ == "__main__":
     longpoll = VkBotLongPoll(vk_session, GROUP_ID, 0)
     morph = MorphAnalyzer(lang='ru')
+
+    redis_db = from_url(REDIS_URL)
+    if not redis_db.get('everyday_word'):
+        redis_db.set('everyday_word', get_word_from_local(), ex=86460)
 
     print('Бот запущен 🚀')
 
@@ -22,6 +28,7 @@ if __name__ == "__main__":
                 if event.t.value == 'message_new':
                     uid: int = event.message['peer_id']
                     text: str = event.message['text'].lower()
+                    thisday_word = redis_db.get('everyday_word').decode()
                     print('📩 {}: получено сообщение «{}»'.format(uid, text))
 
                     if not text:
@@ -32,14 +39,20 @@ if __name__ == "__main__":
                     # ==== АДМИН-ПАНЕЛЬ ====
                     if uid == ADMIN:
                         if 'data' in text:
-                            msg(ADMIN, str('\n'.join([
-                                dumps(i, ensure_ascii=False) for i in list(Player.select().dicts().execute())
-                            ])))
+                            if text == 'data':
+                                response = Player.select().dicts().execute()
+                            else:
+                                act_id = text.split()[1]
+                                if not act_id.isdigit():
+                                    msg(ADMIN, 'Некорректный ввод.')
+                                    continue
+                                response = Player.select().where(Player.id == int(act_id)).dicts().execute()
+                            msg(ADMIN, str('\n'.join([dumps(i, ensure_ascii=False) for i in list(response)])))
                             continue
 
                         if 'clear' in text:
                             action, act_id = text.split()[1], text.split()[2]
-                            if not act_id.isdigit() or action not in ['all', 'stats']:
+                            if not act_id.isdigit() or action not in ['all', 'stats', 'everyday_stats']:
                                 msg(ADMIN, 'Некорректный ввод.')
                                 continue
 
@@ -52,32 +65,89 @@ if __name__ == "__main__":
                                 act_player.stats = dumps({i: 0 for i in (1, 2, 3, 4, 5, 6, 'wins', 'total')})
                                 act_player.save()
                                 msg(ADMIN, 'Статистика пользователя @id{} очищена.'.format(act_id))
+                            elif action == 'everyday_stats':
+                                act_player.everyday_stats = dumps({i: 0 for i in (1, 2, 3, 4, 5, 6, 'wins', 'total')})
+                                act_player.save()
+                                msg(ADMIN, 'Статистика пользователя @id{} очищена.'.format(act_id))
+                            continue
+
+                        if 'change everyday_word' in text:
+                            word = text.split()[-1]
+                            if word == 'everyday_word':
+                                msg(ADMIN, 'Некорректный ввод.')
+                                continue
+                            s = (datetime(
+                                datetime.now().year, datetime.now().month, datetime.now().day + 1, 0, 0
+                            ) - datetime.now()).seconds
+                            redis_db.set('everyday_word', word, ex=s + 60)
+                            msg(ADMIN, 'Слово дня заменено на {}'.format(word))
                             continue
 
                         if 'помощь' in text or 'help' in text:
-                            msg(uid, '– data — выводит всех пользователей из бд\n'
-                                  '– clear {stats|all} <id> — очищает данные о пользователе по id\n'
-                                  '⠀stats — только статистику\n⠀all — полностью пользователя')
-                            continue
+                            msg(uid, '– data [id] — выводит всех пользователей или одного по id из бд\n'
+                                     '– change everyday_word <word> — заменяет слово дня на word\n'
+                                     '– clear {everyday_stats|stats|all} <id> — очищает данные о пользователе по id\n'
+                                     '⠀ ⠀everyday_stats — только статистику слова дня\n'
+                                     '⠀ ⠀stats — только общую статистику\n'
+                                     '⠀ ⠀all — полностью пользователя')
                     # ======================
 
-                    if text.split()[-1].startswith('стат') or text.split()[-1].startswith('stat'):
-                        stats = player.get_stats()
-                        msg(uid, ('Давай посмотрим, как ты играешь 🎮\n'
-                                  + '1: {}\n2: {}\n3: {}\n4: {}\n5: {}\n6: {}\n'.format(
-                                      *[stats[str(i)] for i in range(1, 7)]
-                                  )
-                                  + 'Всего выиграно: {} из {} сыгранн{}.'.format(
-                                      stats['wins'], stats['total'],
-                                      'ой' if stats['total'] % 10 == 1 and stats['total'] % 100 != 11 else 'ых'
-                                  )))
+                    if 'статистика' in text:
+                        is_everyday = any(w in text for w in ['ворд', 'ежедн', 'слово дня'])
+                        stats = player.get_everyday_stats() if is_everyday else player.get_stats()
+
+                        msg(uid, ('Давай посмотрим, как ты играешь в {} 🎮\n'.format(
+                            '«Ворд дня»' if is_everyday else 'свободном режиме'
+                        )
+                            + '1: {}\n2: {}\n3: {}\n4: {}\n5: {}\n6: {}\n'.format(
+                            *[stats[str(i)] for i in range(1, 7)]
+                        )
+                            + 'Всего выиграно: {} из {} сыгранн{}.'.format(
+                            stats['wins'], stats['total'],
+                            'ой' if stats['total'] % 10 == 1 and stats['total'] % 100 != 11 else 'ых'
+                        )))
+                        continue
+
+                    if any(w in text for w in ['ворд', 'ежедн', 'слово дня']):
+                        if thisday_word.upper() in player.everyday_word:
+                            s = (datetime(
+                                datetime.now().year, datetime.now().month, datetime.now().day + 1, 0, 0
+                            ) - datetime.now()).seconds
+                            h, m = s // 3600, s % 3600 // 60
+                            p_h = ('' if h % 10 == 1 else 'а') if h // 10 in [0, 2] and h % 10 in range(1, 5) else 'ов'
+                            p_m = ('у' if m % 10 == 1 else 'ы') if m // 10 in [0] + \
+                                list(range(2, 7)) and m % 10 in range(1, 5) else ''
+                            msg(uid, '{}\n\n'.format(player.everyday_word)
+                                     + 'Кажется, сегодняшний ворд дня уже разгадан. Отдыхай до завтра!\n'
+                                     'Увидимся через {} час{} и {} минут{} ⏳'.format(h, p_h, m, p_m))
+                        else:
+                            player.new_game(redis_db.get('everyday_word').decode())
+                            msg(uid, 'Каждый день я загадываю любое слово из пяти букв, и все игроки его отгадывают. '
+                                     'Только без спойлеров! 😉 \nСоревнуйся с друзьями и отгадывай быстрее них, '
+                                     'тратя меньше попыток. \n\nИтак, играем в ворд дня! ⬜🟨🟩 Пиши первое слово...')
+                            if not player.everyday_word:
+                                player.toggle_push('everyday', True)
+                        continue
+
+                    if 'переключить пуши' in text:
+                        player.toggle_push('everyday')
+                        if player.get_push('everyday'):
+                            msg(uid, 'Уведомления включены! 🔔 Уведомления о новом слове в «Ворде дня» '
+                                     'каждый день в 10:00! 🕙')
+                        else:
+                            msg(uid, 'Уведомления отключены. 🔕 Если захотите включить их обратно, '
+                                     'напишите «переключить пуши».')
                         continue
 
                     if text.split()[-1] in ['помощь', 'help']:
                         msg(uid, 'Разберёмся, что к чему:\n'
                                  '⠀– Напиши любое слово из пяти букв и веселье начнётся!\n'
-                                 '⠀– Напиши «статистика» или «стата», чтобы узнать статистику своих игр.\n'
-                                 '⠀– Напиши «помощь», чтобы вызвать эту прекрасную справку.\n\n'
+                                 '⠀– Напиши «ворд дня», и мы сыграем в ежедневный режим «Ворд дня»!\n'
+                                 '⠀– Напиши «статистика», чтобы узнать статистику своих игр.\n'
+                                 '⠀– Напиши «статистика ворда дня», чтобы узнать статистику в режиме «Ворд дня».\n'
+                                 '⠀– Напиши «помощь», чтобы вызвать эту прекрасную справку.\n'
+                                 '⠀– Напиши «переключить пуши», чтобы включить или отключить ежедневные '
+                                 'уведомления про «Ворд дня».\n\n'
                                  'Да начнётся веселье! 🏃🏻‍♂️'
                             )
                         continue
@@ -126,19 +196,38 @@ if __name__ == "__main__":
                     if player.uword == player.cword:
                         num_to_word = {1: 'первой', 2: 'второй', 3: 'третьей',
                                        4: 'четвёртой', 5: 'пятой', 6: 'последней'}
-                        msg(uid, '''Это победа! Ты завордлил слово {} с {} попытки. Так держать! ✊🏻
-Больше об этом слове: https://ru.wiktionary.org/wiki/{}.'''.format(
-                            player.cword.upper(), num_to_word[player.guesses], player.cword
-                        ))
-                        player.win(player.guesses)
+                        if player.cword == thisday_word:
+                            msg(uid, 'Это победа! Ты угадал ворд дня '
+                                     '{} c {} попытки.\n'.format(player.cword.upper(), num_to_word[player.guesses]))
+                            msg(uid, 'Делись своей победой в ворде дня с друзьми:\n\n{}'.format(player.story))
+                            player.everyday_word = player.story
+                        else:
+                            msg(uid, 'Это победа! Ты завордлил слово '
+                                     '{} с {} попытки. '.format(player.cword.upper(), num_to_word[player.guesses])
+                                     + 'Так держать! ✊🏻\nБольше об этом слове: '
+                                     'https://ru.wiktionary.org/wiki/{}.'.format(player.cword))
+                        player.win(player.guesses, player.cword == thisday_word)
                     else:
                         player.increase_guesses()
 
                     if player.guesses == 7:
-                        msg(uid, '''Ты проиграл 😔 Загаданное слово: {0}.
-Больше об этом слове: https://ru.wiktionary.org/wiki/{0}.'''.format(player.cword))
-                        player.lose()
+                        if player.cword == thisday_word:
+                            msg(uid, 'Ты проиграл 😔 Загаданное слово: {0}.\n'.format(player.cword))
+                            msg(uid, 'Делись ходом решения ворда дня с друзьями: \n\n{}'.format(player.story))
+                            player.everyday_word = player.story
+                        else:
+                            msg(uid, 'Ты проиграл 😔 Загаданное слово: {0}.\n'.format(player.cword)
+                                + 'Больше об этом слове: https://ru.wiktionary.org/wiki/{0}.'.format(player.cword))
+                        player.lose(player.cword == thisday_word)
 
                     player.save()
             except Exception:
                 msg(ADMIN, 'Поймали ошибку. Смотри трейсбек:\n\n{}'.format('\n'.join(format_exc().split('\n')[1:])))
+        if (datetime.now().hour, datetime.now().minute, datetime.now().second) == (0, 0, 0):
+            redis_db.set('everyday_word', get_word_from_local(), ex=86460)
+        if (datetime.now().hour, datetime.now().minute, datetime.now().second) == (10, 0, 0):
+            all_players: list[Player] = Player.select()
+            thisday_word = redis_db.get('everyday_word').decode()
+            for p in all_players:
+                if thisday_word.upper() not in p.everyday_word and p.get_push('everyday'):
+                    msg(p.id, 'Привет! Кажется, в режиме «Ворд дня» обновилось слово. Сыграем? ⬜🟨🟩')
