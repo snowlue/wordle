@@ -39,50 +39,50 @@ if __name__ == "__main__":
                     player: Player = Player.get_or_create(id=uid, defaults={'cword': get_new_word()})[0]
 
                     # ==== АДМИН-ПАНЕЛЬ ====
-                    if uid == ADMIN:
+                    if uid in ADMIN:
                         if 'data' in text:
                             if text == 'data':
                                 response = Player.select().dicts().execute()
                             else:
                                 act_id = text.split()[1]
                                 if not act_id.isdigit():
-                                    msg(ADMIN, 'Некорректный ввод.')
+                                    msg(uid, 'Некорректный ввод.')
                                     continue
                                 response = Player.select().where(Player.id == int(act_id)).dicts().execute()
-                            msg(ADMIN, str('\n'.join([dumps(i, ensure_ascii=False) for i in list(response)])))
+                            msg(uid, str('\n'.join([dumps(i, ensure_ascii=False) for i in list(response)])))
                             continue
 
                         if 'clear' in text:
                             action, act_id = text.split()[1], text.split()[2]
                             if not act_id.isdigit() or action not in ['all', 'everyday_stats', 'stats']:
-                                msg(ADMIN, 'Некорректный ввод.')
+                                msg(uid, 'Некорректный ввод.')
                                 continue
 
                             act_player = Player.get(Player.id == int(act_id))
 
                             if action == 'all':
                                 res = act_player.delete_instance()
-                                msg(ADMIN, 'Удалены данные о {} пользователях.'.format(res))
+                                msg(uid, 'Удалены данные о {} пользователях.'.format(res))
                             elif action == 'everyday_stats':
                                 act_player.everyday_stats = dumps({i: 0 for i in (1, 2, 3, 4, 5, 6, 'wins', 'total')})
                                 act_player.save()
-                                msg(ADMIN, 'Статистика пользователя @id{} очищена.'.format(act_id))
+                                msg(uid, 'Статистика пользователя @id{} очищена.'.format(act_id))
                             elif action == 'stats':
                                 act_player.stats = dumps({i: 0 for i in (1, 2, 3, 4, 5, 6, 'wins', 'total')})
                                 act_player.save()
-                                msg(ADMIN, 'Статистика пользователя @id{} очищена.'.format(act_id))
+                                msg(uid, 'Статистика пользователя @id{} очищена.'.format(act_id))
                             continue
 
                         if 'change everyday_word' in text:
                             word = text.split()[-1]
                             if word == 'everyday_word':
-                                msg(ADMIN, 'Некорректный ввод.')
+                                msg(uid, 'Некорректный ввод.')
                                 continue
                             s = (datetime(
                                 datetime.now().year, datetime.now().month, datetime.now().day + 1, 0, 0
                             ) - datetime.now()).seconds
                             redis_db.set('everyday_word', word, ex=s + 60)
-                            msg(ADMIN, 'Слово дня заменено на {}'.format(word))
+                            msg(uid, 'Слово дня заменено на {}'.format(word))
                             continue
 
                         if 'помощь' in text or 'help' in text:
@@ -223,7 +223,7 @@ if __name__ == "__main__":
 
                     player.save()
             except Exception:
-                msg(ADMIN, 'Поймали ошибку. Смотри трейсбек:\n\n{}'.format('\n'.join(format_exc().split('\n')[1:])))
+                msg(ADMIN[0], 'Поймали ошибку. Смотри трейсбек:\n\n{}'.format('\n'.join(format_exc().split('\n')[1:])))
         if (datetime.now().hour + 3, datetime.now().minute, datetime.now().second) == (0, 0, 0):
             redis_db.set('everyday_word', get_word_from_local(), ex=86460)
             time.sleep(1)
