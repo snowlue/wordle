@@ -156,7 +156,7 @@ if __name__ == "__main__":
                     if not player.story:
                         player.story = ''
 
-                    player.uword = text.split()[-1]
+                    player.uword = text.split()[-1].lower()
 
                     if not check_word_existence(player.uword):
                         msg(uid, '{}Нет в словаре\n{}'.format(player.story,

@@ -54,13 +54,13 @@ def get_new_word() -> str:
     word = unquote(res.url).split('/')[-1]
     while (any(case in res.text for case in [
         'имя собственное', 'вульгарное', 'сленговое', ', одушевлённое',
-        'разговорное', 'старинное', 'редкое', 'устаревшее'
+        'разговорное', 'старинное', 'редкое', 'устаревшее', 'сокращённое'
     ])
             or 'существительное' not in res.text or word == word.title()):
         res = get('https://ru.wiktionary.org/wiki/Служебная:RandomInCategory/Слова_из_5_букв/ru')
         word = unquote(res.url).split('/')[-1]
 
-    return word
+    return word.lower()
 
 
 def get_word_from_local() -> str:
