@@ -95,7 +95,7 @@ if __name__ == "__main__":
                     # ======================
 
                     if 'статистика' in text:
-                        is_everyday = any(w in text for w in ['ворд', 'ежедн', 'слово дня'])
+                        is_everyday = any(w in text for w in ['ворд', 'ежедн', 'слова дня'])
                         stats = player.get_everyday_stats() if is_everyday else player.get_stats()
 
                         msg(uid, ('Давай посмотрим, как ты играешь в {} 🎮\n'.format(
