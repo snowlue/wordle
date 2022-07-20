@@ -81,7 +81,7 @@ if __name__ == "__main__":
                             s = (datetime(
                                 datetime.now().year, datetime.now().month, datetime.now().day + 1, 0, 0
                             ) - datetime.now()).seconds
-                            redis_db.set('everyday_word', word, ex=s + 60)
+                            redis_db.set('everyday_word', word, ex=s + 3 * 3600)
                             msg(uid, 'Слово дня заменено на {}'.format(word))
                             continue
 
@@ -149,7 +149,8 @@ if __name__ == "__main__":
                                  '⠀– Напиши «помощь», чтобы вызвать эту прекрасную справку.\n'
                                  '⠀– Напиши «переключить пуши», чтобы включить или отключить ежедневные '
                                  'уведомления про «Ворд дня».\n\n'
-                                 'Да начнётся веселье! 🏃🏻‍♂️'
+                                 'Если остались вопросы или ты не знаешь правила игры, то заглядывай в статью 👇🏻',
+                            attach='article-210542356_206516_dca4ce9d20bc4be614'
                             )
                         continue
 
@@ -168,11 +169,9 @@ if __name__ == "__main__":
                         if player.uword[i] == player.cword[i]:
                             mask += '🟩'
                             lmask = list(lmask)
-                            if player.uword[i].upper() in lmask[lmask.index('⠀'):]:
-                                lmask.remove(player.uword[i].upper())
                             lmask[i] = player.uword[i].upper()
                             lmask = ''.join(lmask)  # type: ignore
-                            lmask += player.uword[i].upper()
+                            lmask += player.uword[i]
                         elif (player.uword[i] in player.cword
                               and player.uword[:i].count(player.uword[i])
                               != player.cword.count(player.uword[i])
