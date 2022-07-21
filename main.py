@@ -165,6 +165,7 @@ if __name__ == "__main__":
                     if text.split()[-1] in ['правила', 'rules']:
                         msg(uid, 'Лови правила игры, я там всё подробно расписал 👇🏻',
                             attach='article-210542356_206516_dca4ce9d20bc4be614')
+                        continue
 
                     if not player.story:
                         player.story = ''
