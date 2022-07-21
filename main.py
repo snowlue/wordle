@@ -36,7 +36,14 @@ if __name__ == "__main__":
                     if not text:
                         continue
 
-                    player: Player = Player.get_or_create(id=uid, defaults={'cword': get_new_word()})[0]
+                    response: tuple[Player, bool] = Player.get_or_create(id=uid, defaults={'cword': get_new_word()})
+                    player, created = response
+                    
+                    if created:
+                        msg(uid, 'Привет! Добро пожаловать в Вордли — ту самую игру, которая покорила Твиттер ⬜🟨🟩\nНу '
+                                 'что, сыграем? Не стесняйся, проходи, читай правила игры ниже и пиши первое слово 👇🏻',
+                            attach='article-210542356_206516_dca4ce9d20bc4be614')
+                        continue
 
                     # ==== АДМИН-ПАНЕЛЬ ====
                     if uid in ADMIN:
