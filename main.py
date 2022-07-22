@@ -57,7 +57,7 @@ if __name__ == "__main__":
                                     continue
                                 
                                 if act_id == 'everyday_word':
-                                    response = thisday_word  # type: ignore
+                                    response = [thisday_word]  # type: ignore
                                 else:
                                     response = Player.select().where(Player.id == int(act_id)).dicts().execute()
                             msg(uid, str('\n'.join([dumps(i, ensure_ascii=False) for i in list(response)])))
@@ -129,7 +129,8 @@ if __name__ == "__main__":
                             p_h = ('' if h % 10 == 1 else 'а') if h // 10 in [0, 2] and h % 10 in range(1, 5) else 'ов'
                             p_m = ('у' if m % 10 == 1 else 'ы') if m // 10 in [0] + \
                                 list(range(2, 7)) and m % 10 in range(1, 5) else ''
-                            msg(uid, '{}\n\n'.format(player.everyday_word)
+                            story = '\n'.join([s.split()[1] for s in player.everyday_word.split('\n')[:-1]])
+                            msg(uid, '{}\n\n'.format(story)
                                      + 'Кажется, сегодняшний ворд дня уже разгадан. Отдыхай до завтра!\n'
                                      'Новое слово через {} час{} и {} минут{} ⏳'.format(h, p_h, m, p_m))
                         else:
@@ -214,9 +215,10 @@ if __name__ == "__main__":
                         num_to_word = {1: 'первой', 2: 'второй', 3: 'третьей',
                                        4: 'четвёртой', 5: 'пятой', 6: 'последней'}
                         if player.cword == thisday_word:
+                            story = '\n'.join([s.split()[1] for s in player.story.split('\n')[:-1]])
                             msg(uid, 'Это победа! Ты угадал ворд дня '
                                      '{} c {} попытки.\n'.format(player.cword.upper(), num_to_word[player.guesses]))
-                            msg(uid, 'Делись своей победой в ворде дня с друзьми:\n\n{}'.format(player.story))
+                            msg(uid, 'Делись своей победой в ворде дня с друзьми:\n\n{}'.format(story))
                             player.everyday_word = player.story
                         else:
                             msg(uid, 'Это победа! Ты завордлил слово '
@@ -229,8 +231,9 @@ if __name__ == "__main__":
 
                     if player.guesses == 7:
                         if player.cword == thisday_word:
+                            story = '\n'.join([s.split()[1] for s in player.story.split('\n')[:-1]])
                             msg(uid, 'Ты проиграл 😔 Загаданное слово: {0}.\n'.format(player.cword))
-                            msg(uid, 'Делись ходом решения ворда дня с друзьями: \n\n{}'.format(player.story))
+                            msg(uid, 'Делись ходом решения ворда дня с друзьями: \n\n{}'.format(story))
                             player.everyday_word = player.story
                         else:
                             msg(uid, 'Ты проиграл 😔 Загаданное слово: {0}.\n'.format(player.cword)
