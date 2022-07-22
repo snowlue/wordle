@@ -52,10 +52,14 @@ if __name__ == "__main__":
                                 response = Player.select().dicts().execute()
                             else:
                                 act_id = text.split()[1]
-                                if not act_id.isdigit():
+                                if not act_id.isdigit() and act_id != 'everyday_word':
                                     msg(uid, 'Некорректный ввод.')
                                     continue
-                                response = Player.select().where(Player.id == int(act_id)).dicts().execute()
+                                
+                                if act_id == 'everyday_word':
+                                    response = thisday_word  # type: ignore
+                                else:
+                                    response = Player.select().where(Player.id == int(act_id)).dicts().execute()
                             msg(uid, str('\n'.join([dumps(i, ensure_ascii=False) for i in list(response)])))
                             continue
 
@@ -243,7 +247,7 @@ if __name__ == "__main__":
             all_players: list[Player] = Player.select()
             thisday_word = redis_db.get('everyday_word').decode()
             for p in all_players:
-                if thisday_word.upper() not in p.everyday_word and p.get_push('everyday'):
+                if p.get_push('everyday') and thisday_word.upper() not in p.everyday_word:
                     msg(p.id, 'Привет! В режиме «Ворд дня» появилось новое слово. Сыграем? Пиши «ворд дня» и погнали! '
                               '⬜🟨🟩\n\nОтключить ежедневные напоминания можно при помощи команды «переключить пуши».')
             time.sleep(1)
