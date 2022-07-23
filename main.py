@@ -52,12 +52,14 @@ if __name__ == "__main__":
                                 response = Player.select().dicts().execute()
                             else:
                                 act_id = text.split()[1]
-                                if not act_id.isdigit() and act_id != 'everyday_word':
+                                if not act_id.isdigit() and act_id not in ['everyday_word', 'time']:
                                     msg(uid, 'Некорректный ввод.')
                                     continue
                                 
                                 if act_id == 'everyday_word':
                                     response = [thisday_word]  # type: ignore
+                                elif act_id == 'time':
+                                    response = [str(datetime.now())]  # type: ignore
                                 else:
                                     response = Player.select().where(Player.id == int(act_id)).dicts().execute()
                             msg(uid, str('\n'.join([dumps(i, ensure_ascii=False) for i in list(response)])))
@@ -98,11 +100,14 @@ if __name__ == "__main__":
 
                         if 'помощь' in text or 'help' in text:
                             msg(uid, '– change everyday_word <word> — заменяет слово дня на word\n'
-                                     '– clear {everyday_stats|stats|all} <id> — очищает данные о пользователе по id\n'
+                                     '– clear <everyday_stats|stats|all> <id> — очищает данные о пользователе по id\n'
                                      '⠀ ⠀all — полностью пользователя\n'
                                      '⠀ ⠀everyday_stats — только статистику слова дня\n'
                                      '⠀ ⠀stats — только общую статистику\n'
-                                     '– data [id] — выводит всех пользователей или одного по id из бд')
+                                     '– data [{id}|everyday_word|time] — выводит данные из БД\n'
+                                     '⠀ ⠀{id} — данные из БД об одном пользователе по id\n'
+                                     '⠀ ⠀everyday_word — значение REDIS.everyday_word\n'
+                                     '⠀ ⠀time — текущее время на сервере')
                     # ======================
 
                     if 'статистика' in text:
