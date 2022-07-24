@@ -248,7 +248,7 @@ if __name__ == "__main__":
                     player.save()
             except Exception:
                 msg(ADMIN[0], 'Поймали ошибку. Смотри трейсбек:\n\n{}'.format('\n'.join(format_exc().split('\n')[1:])))
-        if (datetime.now().hour + 3, datetime.now().minute, datetime.now().second) == (0, 0, 0):
+        if (datetime.now().hour + 3, datetime.now().minute, datetime.now().second) == (24, 0, 0):
             redis_db.set('everyday_word', get_word_from_local(), ex=86460)
             time.sleep(1)
         if (datetime.now().hour + 3, datetime.now().minute, datetime.now().second) == (10, 0, 0):
