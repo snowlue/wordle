@@ -131,9 +131,9 @@ if __name__ == "__main__":
                             s = (datetime(datetime.now().year, datetime.now().month, datetime.now().day + 1)
                                  - datetime.now()).seconds
                             h, m = s // 3600 - 3, s % 3600 // 60 + 1
-                            p_h = ('' if h % 10 == 1 else 'а') if h // 10 in [0, 2] and h % 10 in range(1, 5) else 'ов'
-                            p_m = ('у' if m % 10 == 1 else 'ы') if m // 10 in [0] + \
-                                list(range(2, 7)) and m % 10 in range(1, 5) else ''
+                            
+                            p_h = 'а' * (h % 10 != 1) if h // 10 in [0, 2] and h % 10 in range(1, 5) else 'ов'
+                            p_m = ('ы', 'y')[m % 10 == 1] if m // 10 in [0] + list(range(2, 7)) and m % 10 in range(1, 5) else ''
                             story = '\n'.join([' '.join(s.split()[:2]) for s in player.everyday_word.split('\n')[:-1]])
                             msg(uid, '{}\n\n'.format(story)
                                      + 'Кажется, сегодняшний ворд дня уже разгадан. Отдыхай до завтра!\n'
